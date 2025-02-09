@@ -34,8 +34,8 @@ build () {
   fi
   for ARCHTAG in ${ALL_ARCHS}; do
     # build the base images
-    docker build --pull -t openwebrx-base:${ARCHTAG} -f docker/Dockerfiles/Dockerfile-base .
-    docker build --build-arg ARCHTAG=${ARCHTAG} -t openwebrx-soapysdr-base:${ARCHTAG} -f docker/Dockerfiles/Dockerfile-soapysdr .
+    docker build --pull -t openwebrx-base:${TAG}-${ARCHTAG} -f docker/Dockerfiles/Dockerfile-base .
+    docker build --build-arg ARCHTAG=${TAG}-${ARCHTAG} -t openwebrx-soapysdr-base:${TAG}-${ARCHTAG} -f docker/Dockerfiles/Dockerfile-soapysdr .
 
     local build_images="${target_image}"
     if [ "$target_image" = "all" ]; then
@@ -46,14 +46,15 @@ build () {
       i=${image:10}
       # "openwebrx" is a special image that gets tag-aliased later on
       if [[ ! -z "${i}" ]] ; then
-        docker build --build-arg ARCHTAG=$ARCHTAG -t ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${ARCHTAG} -f docker/Dockerfiles/Dockerfile-${i} .
-        docker push ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${ARCHTAG}
+        docker build --build-arg ARCHTAG=${TAG}-$ARCHTAG -t ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${TAG}-${ARCHTAG} -f docker/Dockerfiles/Dockerfile-${i} .
+        docker push ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${TAG}-${ARCHTAG}
       fi
     done
 
     # tag openwebrx alias image
     if [ "$target_image" = "all" ] || [ "$target_image" = "openwebrx-full" ]; then
-      docker tag ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/openwebrx-full:${ARCHTAG} ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/openwebrx:${ARCHTAG}
+      docker tag ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/openwebrx-full:${TAG}-${ARCHTAG} ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/openwebrx:${TAG}-${ARCHTAG}
+      docker push ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/openwebrx:${TAG}-${ARCHTAG}
     fi
   done
 }
@@ -76,7 +77,7 @@ push () {
   fi
 
   for image in ${push_images}; do
-    docker push ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${ARCHTAG}
+    docker push ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${TAG}-${ARCHTAG}
   done
 }
 
@@ -87,6 +88,7 @@ manifest () {
     IMAGE_LIST=""
     for a in ${ALL_ARCHS}; do
       IMAGE_LIST="${IMAGE_LIST} ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${TAG}-${a}"
+      docker pull ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${TAG}-${a}
     done
     docker manifest create ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${TAG} ${IMAGE_LIST}
     docker manifest push --purge ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${TAG}

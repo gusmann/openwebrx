@@ -15,6 +15,28 @@ jobs:
     permissions:
       contents: read
       packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - openwebrx-rtlsdr
+          - openwebrx-sdrplay
+          - openwebrx-hackrf
+          - openwebrx-airspy
+          - openwebrx-afedri
+          - openwebrx-rtlsdr-soapy
+          - openwebrx-plutosdr
+          - openwebrx-limesdr
+          - openwebrx-soapyremote
+          - openwebrx-perseus
+          - openwebrx-fcdpp
+          - openwebrx-radioberry
+          - openwebrx-uhd
+          - openwebrx-rtltcp
+          - openwebrx-runds
+          - openwebrx-hpsdr
+          - openwebrx-bladerf
+          - openwebrx-full
 
     steps:
       - name: Checkout repository
@@ -46,11 +68,18 @@ jobs:
       - name: Execute docker.sh - build
         run: |
           chmod +x ./docker.sh
-          ./docker.sh build all
+          ./docker.sh build ${{ matrix.image }}
         env:
           IMAGE_REGISTRY: ${{ env.IMAGE_REGISTRY }}
           IMAGE_REPOSITORY: ${{ env.IMAGE_REPOSITORY }}
           TAG: ${{ env.TAG }}
+  manifest:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
       - name: Execute docker.sh - manifest
         run: |
           chmod +x ./docker.sh
