@@ -4,6 +4,11 @@ on:
   push:
   workflow_dispatch:
 
+# Add concurrency configuration
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -30,8 +35,8 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo "REGISTRY=ghcr.io" >> $GITHUB_ENV
-          echo "REPOSITORY=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+          echo "IMAGE_REGISTRY=ghcr.io" >> $GITHUB_ENV
+          echo "IMAGE_REPOSITORY=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
           if [ "${{ github.ref_name }}" = "main" ]; then
             echo "TAG=${{ github.sha }},latest" >> $GITHUB_ENV
           else
@@ -43,14 +48,14 @@ jobs:
           chmod +x ./docker.sh
           ./docker.sh build all
         env:
-          REGISTRY: ${{ env.REGISTRY }}
-          REPOSITORY: ${{ env.REPOSITORY }}
+          IMAGE_REGISTRY: ${{ env.IMAGE_REGISTRY }}
+          IMAGE_REPOSITORY: ${{ env.IMAGE_REPOSITORY }}
           TAG: ${{ env.TAG }}
       - name: Execute docker.sh - manifest
         run: |
           chmod +x ./docker.sh
           ./docker.sh manifest
         env:
-          REGISTRY: ${{ env.REGISTRY }}
-          REPOSITORY: ${{ env.REPOSITORY }}
+          IMAGE_REGISTRY: ${{ env.IMAGE_REGISTRY }}
+          IMAGE_REPOSITORY: ${{ env.IMAGE_REPOSITORY }}
           TAG: ${{ env.TAG }}

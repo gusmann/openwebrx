@@ -5,7 +5,7 @@ ARCH=$(uname -m)
 IMAGES="openwebrx-rtlsdr openwebrx-sdrplay openwebrx-hackrf openwebrx-airspy openwebrx-afedri openwebrx-rtlsdr-soapy openwebrx-plutosdr openwebrx-limesdr openwebrx-soapyremote openwebrx-perseus openwebrx-fcdpp openwebrx-radioberry openwebrx-uhd openwebrx-rtltcp openwebrx-runds openwebrx-hpsdr openwebrx-bladerf openwebrx-full openwebrx"
 ALL_ARCHS="x86_64 armv7l aarch64"
 IMAGE_REGISTRY="${IMAGE_REGISTRY:-docker.io}"
-IMAGE_REPO="${IMAGE_REPO:-jketterl}"
+IMAGE_REPOSITORY="${IMAGE_REPOSITORY:-jketterl}"
 TAG=${TAG:-"latest"}
 ARCHTAG="${TAG}-${ARCH}"
 
@@ -32,29 +32,30 @@ build () {
     echo "Available images: ${IMAGES}"
     return 1
   fi
+  for ARCHTAG in ${ALL_ARCHS}; do
+    # build the base images
+    docker build --pull -t openwebrx-base:${ARCHTAG} -f docker/Dockerfiles/Dockerfile-base .
+    docker build --build-arg ARCHTAG=${ARCHTAG} -t openwebrx-soapysdr-base:${ARCHTAG} -f docker/Dockerfiles/Dockerfile-soapysdr .
 
-  # build the base images
-  docker build --pull -t openwebrx-base:${ARCHTAG} -f docker/Dockerfiles/Dockerfile-base .
-  docker build --build-arg ARCHTAG=${ARCHTAG} -t openwebrx-soapysdr-base:${ARCHTAG} -f docker/Dockerfiles/Dockerfile-soapysdr .
+    local build_images="${target_image}"
+    if [ "$target_image" = "all" ]; then
+      build_images="${IMAGES}"
+    fi
 
-  local build_images="${target_image}"
-  if [ "$target_image" = "all" ]; then
-    build_images="${IMAGES}"
-  fi
+    for image in ${build_images}; do
+      i=${image:10}
+      # "openwebrx" is a special image that gets tag-aliased later on
+      if [[ ! -z "${i}" ]] ; then
+        docker build --build-arg ARCHTAG=$ARCHTAG -t ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${ARCHTAG} -f docker/Dockerfiles/Dockerfile-${i} .
+        docker push ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${ARCHTAG}
+      fi
+    done
 
-  for image in ${build_images}; do
-    i=${image:10}
-    # "openwebrx" is a special image that gets tag-aliased later on
-    if [[ ! -z "${i}" ]] ; then
-      docker build --build-arg ARCHTAG=$ARCHTAG -t ${IMAGE_REGISTRY}/${IMAGE_REPO}/${image}:${ARCHTAG} -f docker/Dockerfiles/Dockerfile-${i} .
-      docker push ${IMAGE_REGISTRY}/${IMAGE_REPO}/${image}:${ARCHTAG}
+    # tag openwebrx alias image
+    if [ "$target_image" = "all" ] || [ "$target_image" = "openwebrx-full" ]; then
+      docker tag ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/openwebrx-full:${ARCHTAG} ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/openwebrx:${ARCHTAG}
     fi
   done
-
-  # tag openwebrx alias image
-  if [ "$target_image" = "all" ] || [ "$target_image" = "openwebrx-full" ]; then
-    docker tag ${IMAGE_REGISTRY}/${IMAGE_REPO}/openwebrx-full:${ARCHTAG} ${IMAGE_REGISTRY}/${IMAGE_REPO}/openwebrx:${ARCHTAG}
-  fi
 }
 
 push () {
@@ -75,20 +76,20 @@ push () {
   fi
 
   for image in ${push_images}; do
-    docker push ${IMAGE_REGISTRY}/${IMAGE_REPO}/${image}:${ARCHTAG}
+    docker push ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${ARCHTAG}
   done
 }
 
 manifest () {
   for image in ${IMAGES}; do
     # there's no docker manifest rm command, and the create --amend does not work, so we have to clean up manually
-    rm -rf "${HOME}/.docker/manifests/${IMAGE_REGISTRY}_${IMAGE_REPO/\//_}_${image}-${TAG}"
+    rm -rf "${HOME}/.docker/manifests/${IMAGE_REGISTRY}_${IMAGE_REPOSITORY/\//_}_${image}-${TAG}"
     IMAGE_LIST=""
     for a in ${ALL_ARCHS}; do
-      IMAGE_LIST="${IMAGE_LIST} ${IMAGE_REGISTRY}/${IMAGE_REPO}/${image}:${TAG}-${a}"
+      IMAGE_LIST="${IMAGE_LIST} ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${TAG}-${a}"
     done
-    docker manifest create ${IMAGE_REGISTRY}/${IMAGE_REPO}/${image}:${TAG} ${IMAGE_LIST}
-    docker manifest push --purge ${IMAGE_REGISTRY}/${IMAGE_REPO}/${image}:${TAG}
+    docker manifest create ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${TAG} ${IMAGE_LIST}
+    docker manifest push --purge ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${TAG}
   done
 }
 
@@ -103,17 +104,17 @@ tag () {
 
   for image in ${IMAGES}; do
     # there's no docker manifest rm command, and the create --amend does not work, so we have to clean up manually
-    rm -rf "${HOME}/.docker/manifests/${IMAGE_REGISTRY}_${IMAGE_REPO/\//_}_${image}-${TARGET_TAG}"
+    rm -rf "${HOME}/.docker/manifests/${IMAGE_REGISTRY}_${IMAGE_REPOSITORY/\//_}_${image}-${TARGET_TAG}"
     IMAGE_LIST=""
     for a in ${ALL_ARCHS}; do
-      docker pull ${IMAGE_REGISTRY}/${IMAGE_REPO}/${image}:${SRC_TAG}-${a}
-      docker tag ${IMAGE_REGISTRY}/${IMAGE_REPO}/${image}:${SRC_TAG}-${a} ${IMAGE_REGISTRY}/${IMAGE_REPO}/${image}:${TARGET_TAG}-${a}
-      docker push ${IMAGE_REGISTRY}/${IMAGE_REPO}/${image}:${TARGET_TAG}-${a}
-      IMAGE_LIST="${IMAGE_LIST} ${IMAGE_REGISTRY}/${IMAGE_REPO}/${image}:${TARGET_TAG}-${a}"
+      docker pull ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${SRC_TAG}-${a}
+      docker tag ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${SRC_TAG}-${a} ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${TARGET_TAG}-${a}
+      docker push ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${TARGET_TAG}-${a}
+      IMAGE_LIST="${IMAGE_LIST} ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${TARGET_TAG}-${a}"
     done
-    docker manifest create ${IMAGE_REGISTRY}/${IMAGE_REPO}/${image}:${TARGET_TAG} ${IMAGE_LIST}
-    docker manifest push --purge ${IMAGE_REGISTRY}/${IMAGE_REPO}/${image}:${TARGET_TAG}
-    docker pull ${IMAGE_REGISTRY}/${IMAGE_REPO}/${image}:${TARGET_TAG}
+    docker manifest create ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${TARGET_TAG} ${IMAGE_LIST}
+    docker manifest push --purge ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${TARGET_TAG}
+    docker pull ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${TARGET_TAG}
   done
 }
 
