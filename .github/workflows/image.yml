@@ -41,7 +41,7 @@ jobs:
       - name: Execute docker.sh
         run: |
           chmod +x ./docker.sh
-          ./docker.sh all
+          ./docker.sh build all
         env:
           REGISTRY: ${{ env.REGISTRY }}
           REPOSITORY: ${{ env.REPOSITORY }}
