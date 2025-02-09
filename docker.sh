@@ -51,7 +51,7 @@ build () {
   done
 
   # tag openwebrx alias image
-  if [ "$target_image" = "all" ] || [ "$target_image" = "openwebrx" ] || [ "$target_image" = "openwebrx-full" ]; then
+  if [ "$target_image" = "all" ] || [ "$target_image" = "openwebrx-full" ]; then
     docker tag ${IMAGE_REGISTRY}/${IMAGE_REPO}/openwebrx-full:${ARCHTAG} ${IMAGE_REGISTRY}/${IMAGE_REPO}/openwebrx:${ARCHTAG}
   fi
 }

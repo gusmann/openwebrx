@@ -1,8 +1,7 @@
-name: Build and Push Docker Image
+name: Build and Push Docker Images
 
 on:
   push:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -42,7 +41,7 @@ jobs:
       - name: Execute docker.sh
         run: |
           chmod +x ./docker.sh
-          ./docker.sh
+          ./docker.sh all
         env:
           REGISTRY: ${{ env.REGISTRY }}
           REPOSITORY: ${{ env.REPOSITORY }}
