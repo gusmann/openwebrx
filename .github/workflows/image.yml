@@ -38,10 +38,18 @@ jobs:
             echo "TAG=${{ github.sha }}" >> $GITHUB_ENV
           fi
 
-      - name: Execute docker.sh
+      - name: Execute docker.sh - build
         run: |
           chmod +x ./docker.sh
           ./docker.sh build all
+        env:
+          REGISTRY: ${{ env.REGISTRY }}
+          REPOSITORY: ${{ env.REPOSITORY }}
+          TAG: ${{ env.TAG }}
+      - name: Execute docker.sh - manifest
+        run: |
+          chmod +x ./docker.sh
+          ./docker.sh manifest
         env:
           REGISTRY: ${{ env.REGISTRY }}
           REPOSITORY: ${{ env.REPOSITORY }}

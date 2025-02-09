@@ -47,6 +47,7 @@ build () {
     # "openwebrx" is a special image that gets tag-aliased later on
     if [[ ! -z "${i}" ]] ; then
       docker build --build-arg ARCHTAG=$ARCHTAG -t ${IMAGE_REGISTRY}/${IMAGE_REPO}/${image}:${ARCHTAG} -f docker/Dockerfiles/Dockerfile-${i} .
+      docker push ${IMAGE_REGISTRY}/${IMAGE_REPO}/${image}:${ARCHTAG}
     fi
   done
 
