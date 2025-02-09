@@ -45,6 +45,7 @@ Recommends: python3-digiham (>= 0.6),
             redsea,
             python3-csdr-eti,
             dablin,
-            python3-paho-mqtt
+            python3-paho-mqtt,
+            python3-elasticsearch
 Description: multi-user web sdr
  Open source, multi-user SDR receiver with a web interface

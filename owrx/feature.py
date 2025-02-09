@@ -92,6 +92,7 @@ class FeatureDetector(object):
         "redsea": ["redsea"],
         "dab": ["csdreti", "dablin"],
         "mqtt": ["paho_mqtt"],
+        "elastic": ["elasticsearch"],
     }
 
     def feature_availability(self):
@@ -110,7 +111,10 @@ class FeatureDetector(object):
         def feature_details(name):
             return {
                 "available": self.is_available(name),
-                "requirements": {name: requirement_details(name) for name in self.get_requirements(name)},
+                "requirements": {
+                    name: requirement_details(name)
+                    for name in self.get_requirements(name)
+                },
             }
 
         return {name: feature_details(name) for name in FeatureDetector.features}
@@ -119,7 +123,11 @@ class FeatureDetector(object):
         return self.has_requirements(self.get_requirements(feature))
 
     def get_failed_requirements(self, feature):
-        return [req for req in self.get_requirements(feature) if not self.has_requirement(req)]
+        return [
+            req
+            for req in self.get_requirements(feature)
+            if not self.has_requirement(req)
+        ]
 
     def get_requirements(self, feature):
         try:
@@ -149,7 +157,11 @@ class FeatureDetector(object):
         if method is not None:
             result = method()
         else:
-            logger.error("detection of requirement {0} not implement. please fix in code!".format(requirement))
+            logger.error(
+                "detection of requirement {0} not implement. please fix in code!".format(
+                    requirement
+                )
+            )
 
         cache.set(requirement, result)
         return result
@@ -177,7 +189,10 @@ class FeatureDetector(object):
                     rc = process.wait(10)
                     break
                 except subprocess.TimeoutExpired:
-                    logger.warning("feature check command \"%s\" did not return after 10 seconds!", command)
+                    logger.warning(
+                        'feature check command "%s" did not return after 10 seconds!',
+                        command,
+                    )
                     process.kill()
 
             if expected_result is None:
@@ -205,8 +220,8 @@ class FeatureDetector(object):
             from pycsdr.modules import version as pycsdr_version
 
             return (
-                LooseVersion(csdr_version) >= required_version and
-                LooseVersion(pycsdr_version) >= required_version
+                LooseVersion(csdr_version) >= required_version
+                and LooseVersion(pycsdr_version) >= required_version
             )
         except ImportError:
             return False
@@ -254,11 +269,15 @@ class FeatureDetector(object):
             return False
 
     def _check_connector(self, command, required_version):
-        owrx_connector_version_regex = re.compile("^{} version (.*)$".format(re.escape(command)))
+        owrx_connector_version_regex = re.compile(
+            "^{} version (.*)$".format(re.escape(command))
+        )
 
         try:
             process = subprocess.Popen([command, "--version"], stdout=subprocess.PIPE)
-            matches = owrx_connector_version_regex.match(process.stdout.readline().decode())
+            matches = owrx_connector_version_regex.match(
+                process.stdout.readline().decode()
+            )
             if matches is None:
                 return False
             version = LooseVersion(matches.group(1))
@@ -302,7 +321,11 @@ class FeatureDetector(object):
 
     def _has_soapy_driver(self, driver):
         try:
-            process = subprocess.Popen(["soapy_connector", "--listdrivers"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            process = subprocess.Popen(
+                ["soapy_connector", "--listdrivers"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+            )
 
             drivers = [line.decode().strip() for line in process.stdout]
             process.wait(1)
@@ -463,7 +486,9 @@ class FeatureDetector(object):
         wsjt_version_regex = re.compile("^WSJT-X (.*)$")
 
         try:
-            process = subprocess.Popen(["wsjtx_app_version", "--version"], stdout=subprocess.PIPE)
+            process = subprocess.Popen(
+                ["wsjtx_app_version", "--version"], stdout=subprocess.PIPE
+            )
             matches = wsjt_version_regex.match(process.stdout.readline().decode())
             if matches is None:
                 return False
@@ -712,6 +737,21 @@ class FeatureDetector(object):
         """
         try:
             from paho.mqtt import __version__
+
+            return True
+        except ImportError:
+            return False
+
+    def has_elastic(self):
+        """
+        OpenWebRX can pass decoded signal data to a Elasticsearch cluster.
+        to do this, the [elasticsearch-py](https://pypi.org/project/elasticsearch/) library is required.
+
+        Debian and Ubuntu users should be able to install the package `python3-elasticsearch` from their distribution.
+        """
+        try:
+            from elasticsearch import __version__
+
             return True
         except ImportError:
             return False
