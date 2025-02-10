@@ -34,8 +34,8 @@ build () {
   fi
   for ARCHTAG in ${ALL_ARCHS}; do
     # build the base images
-    docker build --pull -t openwebrx-base:${TAG}-${ARCHTAG} -f docker/Dockerfiles/Dockerfile-base .
-    docker build --build-arg ARCHTAG=${TAG}-${ARCHTAG} -t openwebrx-soapysdr-base:${TAG}-${ARCHTAG} -f docker/Dockerfiles/Dockerfile-soapysdr .
+    docker build --platform=linux/$ARCHTAG --pull -t openwebrx-base:${TAG}-${ARCHTAG} -f docker/Dockerfiles/Dockerfile-base .
+    docker build --platform=linux/$ARCHTAG --build-arg ARCHTAG=${TAG}-${ARCHTAG} -t openwebrx-soapysdr-base:${TAG}-${ARCHTAG} -f docker/Dockerfiles/Dockerfile-soapysdr .
 
     local build_images="${target_image}"
     if [ "$target_image" = "all" ]; then
@@ -46,7 +46,7 @@ build () {
       i=${image:10}
       # "openwebrx" is a special image that gets tag-aliased later on
       if [[ ! -z "${i}" ]] ; then
-        docker build --build-arg ARCHTAG=${TAG}-$ARCHTAG -t ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${TAG}-${ARCHTAG} -f docker/Dockerfiles/Dockerfile-${i} .
+        docker build --platform=linux/$ARCHTAG --build-arg ARCHTAG=${TAG}-$ARCHTAG -t ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${TAG}-${ARCHTAG} -f docker/Dockerfiles/Dockerfile-${i} .
         docker push ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${image}:${TAG}-${ARCHTAG}
       fi
     done
