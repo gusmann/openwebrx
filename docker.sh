@@ -3,7 +3,7 @@ set -euo pipefail
 
 ARCH=$(uname -m)
 IMAGES="openwebrx-rtlsdr openwebrx-sdrplay openwebrx-hackrf openwebrx-airspy openwebrx-afedri openwebrx-rtlsdr-soapy openwebrx-plutosdr openwebrx-limesdr openwebrx-soapyremote openwebrx-perseus openwebrx-fcdpp openwebrx-radioberry openwebrx-uhd openwebrx-rtltcp openwebrx-runds openwebrx-hpsdr openwebrx-bladerf openwebrx-full openwebrx"
-ALL_ARCHS="x86_64 armv7l aarch64"
+ALL_ARCHS="x86_64 aarch64"
 IMAGE_REGISTRY="${IMAGE_REGISTRY:-docker.io}"
 IMAGE_REPOSITORY="${IMAGE_REPOSITORY:-jketterl}"
 TAG=${TAG:-"latest"}
@@ -34,9 +34,10 @@ build () {
   fi
   for ARCHTAG in ${ALL_ARCHS}; do
     # build the base images
+    echo "Building base images for ${ARCHTAG}"
     docker build --platform=linux/$ARCHTAG --pull -t openwebrx-base:${TAG}-${ARCHTAG} -f docker/Dockerfiles/Dockerfile-base .
     docker build --platform=linux/$ARCHTAG --build-arg ARCHTAG=${TAG}-${ARCHTAG} -t openwebrx-soapysdr-base:${TAG}-${ARCHTAG} -f docker/Dockerfiles/Dockerfile-soapysdr .
-
+    
     local build_images="${target_image}"
     if [ "$target_image" = "all" ]; then
       build_images="${IMAGES}"

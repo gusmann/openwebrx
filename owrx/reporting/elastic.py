@@ -4,7 +4,8 @@ from owrx.property import PropertyDeleted
 import json
 import threading
 import time
-from elasticsearch import Elasticsearch
+from elasticsearch_dsl import Index, Search, connections
+from elasticsearch_dsl import Document, DateRange, Keyword, Range
 
 import logging
 
@@ -24,33 +25,28 @@ class ElasticReporter(Reporter):
                 "elastic_host",
                 "elastic_user",
                 "elastic_password",
+                "elastic_api_key",
                 "elastic_client_id",
                 "elastic_use_ssl",
             ).wire(self._reconnect),
         ]
 
-    def _getClient(self):
+    def _getClient(self) -> Elasticsearch:
         pm = Config.get()
-        clientId = pm["elastic_client_id"] if "elastic_client_id" in pm else ""
-        client = Client(clientId)
 
-        if "elastic_user" in pm and "elastic_password" in pm:
-            client.username_pw_set(pm["elastic_user"], pm["elastic_password"])
+        # Prepare authentication
+        auth_params = {}
+        if "elastic_api_key" in pm:
+            auth_params["api_key"] = pm["elastic_api_key"]
+        elif "elastic_user" in pm and "elastic_password" in pm:
+            auth_params["http_auth"] = (pm["elastic_user"], pm["elastic_password"])
 
-        port = 1883
-        if pm["elastic_use_ssl"]:
-            client.tls_set()
-            port = 8883
-
-        parts = pm["elastic_host"].split(":")
-        host = parts[0]
-        if len(parts) > 1:
-            port = int(parts[1])
-
-        try:
-            client.connect(host=host, port=port)
-        except:
-            logger.exception("Exception connecting to elastic server")
+        client = connections.create_connection(
+            hosts=pm["elastic_host"],
+            use_ssl=pm["elastic_use_ssl"],
+            verify_certs=False,
+            **auth_params
+        )
 
         threading.Thread(target=client.loop_forever).start()
 
