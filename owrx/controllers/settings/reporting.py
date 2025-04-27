@@ -128,5 +128,40 @@ class ReportingController(SettingsFormController):
                     infotext="MQTT topic to publish decodes to (default: openwebrx/decodes)",
                     converter=OptionalConverter(),
                 ),
+            ),
+            Section(
+                "Elasticsearch settings",
+                CheckboxInput(
+                    "elasticsearch_enabled",
+                    "Enable sending spots to Elasticsearch",
+                ),
+                TextInput(
+                    "elasticsearch_host",
+                    "Elasticsearch host",
+                    infotext="Address of the Elasticsearch instance to send spots to",
+                ),
+                TextInput(
+                    "elasticsearch_index",
+                    "Elasticsearch index",
+                    infotext="Index in Elasticsearch to store the spots",
+                ),
+                TextInput(
+                    "elasticsearch_client_kwargs",
+                    "Elasticsearch client kwargs",
+                    infotext="Optional client configuration key-value pairs for Elasticsearch",
+                    converter=OptionalConverter(),
+                ),
+                TextInput(
+                    "elasticsearch_username",
+                    "Elasticsearch username",
+                    infotext="Username for Elasticsearch authentication",
+                    converter=OptionalConverter(),
+                ),
+                PasswordInput(
+                    "elasticsearch_password",
+                    "Elasticsearch password",
+                    infotext="Password for Elasticsearch authentication",
+                    converter=OptionalConverter(),
+                ),
             )
         ]

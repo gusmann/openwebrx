@@ -18,7 +18,8 @@ class ReportingEngine(object):
     reporterClasses = {
         "pskreporter": PskReporter,
         "wsprnet": WsprnetReporter,
-        "mqtt": ("owrx.reporting.mqtt", "MqttReporter")
+        "mqtt": ("owrx.reporting.mqtt", "MqttReporter"),
+        "elasticsearch": ("owrx.reporting.elasticsearch", "ElasticsearchReporter")
     }
 
     @staticmethod
