@@ -20,22 +20,6 @@ jobs:
       matrix:
         image:
           - openwebrx-rtlsdr
-          - openwebrx-sdrplay
-          - openwebrx-hackrf
-          - openwebrx-airspy
-          - openwebrx-afedri
-          - openwebrx-rtlsdr-soapy
-          - openwebrx-plutosdr
-          - openwebrx-limesdr
-          - openwebrx-soapyremote
-          - openwebrx-perseus
-          - openwebrx-fcdpp
-          - openwebrx-radioberry
-          - openwebrx-uhd
-          - openwebrx-rtltcp
-          - openwebrx-runds
-          - openwebrx-hpsdr
-          - openwebrx-bladerf
           - openwebrx-full
 
     steps:
