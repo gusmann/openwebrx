@@ -178,4 +178,7 @@ defaultConfig = PropertyLayer(
     mqtt_enabled=False,
     mqtt_host="localhost",
     mqtt_use_ssl=False,
+    elasticsearch_enabled=False,
+    elasticsearch_host="http://localhost:9200",
+    elasticsearch_index="openwebrx-data",
 ).readonly()

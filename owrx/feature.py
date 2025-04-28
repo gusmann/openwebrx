@@ -92,7 +92,7 @@ class FeatureDetector(object):
         "redsea": ["redsea"],
         "dab": ["csdreti", "dablin"],
         "mqtt": ["paho_mqtt"],
-        "elastic": ["elasticsearch"],
+        "elasticsearch": ["elasticsearch"],
     }
 
     def feature_availability(self):
@@ -742,16 +742,16 @@ class FeatureDetector(object):
         except ImportError:
             return False
 
-    def has_elastic(self):
+    def has_elasticsearch(self):
         """
-        OpenWebRX can pass decoded signal data to a Elasticsearch cluster.
+        OpenWebRX can pass decoded signal data to an Elasticsearch cluster.
         to do this, the [elasticsearch-py](https://pypi.org/project/elasticsearch/) library is required.
 
         Debian and Ubuntu users should be able to install the package `python3-elasticsearch` from their distribution.
+        Alternatively, install w/ pip using the command `pip install elasticsearch`.
         """
         try:
             from elasticsearch import __version__
-
             return True
         except ImportError:
             return False
